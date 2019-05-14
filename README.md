@@ -1,0 +1,1 @@
+This is a simple commit initialazing the Go Stream Server
