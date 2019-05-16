@@ -1,1 +1,1 @@
-This is a simple commit initialazing the Go Stream Server
+This commit Has the first advances of the videoplayer-ms, at first we just create a simple api and dockerizes it with mongodb
