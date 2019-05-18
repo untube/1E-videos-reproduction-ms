@@ -11,9 +11,9 @@ import (
 
 	"gopkg.in/mgo.v2/bson"
 
-	. "VideoPlayer-ms/config"
-	. "VideoPlayer-ms/dao"
-	. "VideoPlayer-ms/models"
+	. "video-reproduction-ms/config"
+	. "video-reproduction-ms/dao"
+	. "video-reproduction-ms/models"
 
 	"github.com/gorilla/mux"
 )
@@ -21,11 +21,22 @@ import (
 var config = Config{}
 var dao = VideosDAO{}
 
+const VIDEO_DIR = "."
+
 const BUFSIZE = 1024 * 8
+
+// Parse the configuration file 'config.toml', and establish a connection to DB
+func init() {
+	config.Read()
+
+	dao.Server = config.Server
+	dao.Database = config.Database
+	dao.Connect()
+}
 
 // GET list of videos
 func AllVideosEndPoint(w http.ResponseWriter, r *http.Request) {
-	videos, err := dao.FindAll()
+	videos, err := dao.FindAllVideos()
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -36,7 +47,7 @@ func AllVideosEndPoint(w http.ResponseWriter, r *http.Request) {
 // GET a video by its ID
 func FindVideoEndpoint(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	video, err := dao.FindById(params["id"])
+	video, err := dao.FindVideoById(params["id"])
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid Movie ID")
 		return
@@ -53,7 +64,7 @@ func CreateVideoEndPoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	video.ID = bson.NewObjectId()
-	if err := dao.Insert(video); err != nil {
+	if err := dao.InsertVideo(video); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -68,7 +79,7 @@ func UpdateVideoEndPoint(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
-	if err := dao.Update(video); err != nil {
+	if err := dao.UpdateVideo(video); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -83,7 +94,7 @@ func DeleteVideoEndPoint(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
-	if err := dao.Delete(video); err != nil {
+	if err := dao.DeleteVideo(video); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -101,23 +112,44 @@ func respondWithJson(w http.ResponseWriter, code int, payload interface{}) {
 	w.Write(response)
 }
 
-// Parse the configuration file 'config.toml', and establish a connection to DB
-func init() {
-	config.Read()
+func FindCommentsEndpoint(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
 
-	dao.Server = config.Server
-	dao.Database = config.Database
-	dao.Connect()
+	comments, err := dao.FindCommentsByVideoId(params["video_id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid Action")
+	}
+
+	respondWithJson(w, http.StatusOK, comments)
+}
+
+func CreateCommentEndpoint(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	var comment Comment
+	if err := json.NewDecoder(r.Body).Decode(&comment); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	comment.ID = bson.NewObjectId()
+	if err := dao.InsertComment(comment); err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondWithJson(w, http.StatusCreated, comment)
 }
 
 func StreamEndpoint(w http.ResponseWriter, r *http.Request) {
 
-	//params := mux.Vars(r)
-	//video, err := dao.FindById(params["id"])
-
+	params := mux.Vars(r)
+	video, err := dao.FindVideoById(params["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid Movie ID")
+		return
+	}
+	path := VIDEO_DIR + video.URL
 	//path := video.URL
 
-	file, err := os.Open(`./movie.mp4`)
+	file, err := os.Open(path)
 	//file, err := os.Open(path)
 
 	if err != nil {
@@ -248,7 +280,9 @@ func main() {
 	r.HandleFunc("/videos", UpdateVideoEndPoint).Methods("PUT")
 	r.HandleFunc("/videos", DeleteVideoEndPoint).Methods("DELETE")
 	r.HandleFunc("/videos/{id}", FindVideoEndpoint).Methods("GET")
-	r.HandleFunc("/video/movie.mp4", StreamEndpoint).Methods("GET")
+	r.HandleFunc("/videos/{video_id}/comments", FindCommentsEndpoint).Methods("GET")
+	r.HandleFunc("/comment", CreateCommentEndpoint).Methods("POST")
+	r.HandleFunc("/watch/movie.mp4", StreamEndpoint)
 
 	if err := http.ListenAndServe(":3000", r); err != nil {
 		log.Fatal(err)

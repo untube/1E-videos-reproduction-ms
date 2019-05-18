@@ -2,12 +2,15 @@ package models
 
 import "gopkg.in/mgo.v2/bson"
 
-// Represents a movie, we uses bson keyword to tell the mgo driver how to name
+// Represents a video, we uses bson keyword to tell the mgo driver how to name
 // the properties in mongodb document
 type Video struct {
-	ID          bson.ObjectId `bson:"_id" json:"id"`
-	Name        string        `bson:"name" json:"name"`
-	Thumbnail   string        `bson:"cover_image" json:"cover_image"`
-	Description string        `bson:"description" json:"description"`
-	URL         string        `bson:"url" json:"url"`
+	ID      bson.ObjectId `bson:"_id" json:"id"`
+	User_ID int           `bson:"user_id" json:"user_id"`
+	//Category_ID bson.ObjectId `bson:"category_id" json:"category_id"`
+	Title       string    `bson:"title" json:"title"`
+	Description string    `bson:"description" json:"description"`
+	URL         string    `bson:"url" json:"url"`
+	Views       int       `bson:"views" json:"views"`
+	Comments    []Comment `bson:"comment" json:"comment"`
 }

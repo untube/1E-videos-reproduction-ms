@@ -1,2 +1,2 @@
-server="mongodb"
-database="movies_db"
+server="localhost"
+database="videos_db"
