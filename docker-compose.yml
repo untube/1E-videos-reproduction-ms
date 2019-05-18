@@ -1,6 +1,6 @@
 version: "2"
 services:
-  videoplayer-ms:
+  video-reproducer-ms:
       build:
         context: ./
       ports: 

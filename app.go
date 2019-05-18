@@ -149,6 +149,21 @@ func CreateCommentEndpoint(w http.ResponseWriter, r *http.Request) {
 	respondWithJson(w, http.StatusCreated, comment)
 }
 
+func CreateCategoryEndpoint(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	var category Category
+	if err := json.NewDecoder(r.Body).Decode(&category); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	category.ID = bson.NewObjectId()
+	if err := dao.InsertCategory(category); err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondWithJson(w, http.StatusCreated, category)
+}
+
 func AllCategoriesEndpoint(w http.ResponseWriter, r *http.Request) {
 	categories, err := dao.FindAllCategories()
 	if err != nil {
@@ -306,19 +321,20 @@ func main() {
 	fmt.Println("Starting Server")
 	r := mux.NewRouter()
 	r.HandleFunc("/videos", AllVideosEndPoint).Methods("GET")
-	//r.HandleFunc("/videos", CreateVideoEndPoint).Methods("POST") //Created for Testing Purposes
-	r.HandleFunc("/videos", UpdateVideoEndPoint).Methods("PUT") //Creates for Testing Purposes
-	//r.HandleFunc("/videos", DeleteVideoEndPoint).Methods("DELETE")
+	r.HandleFunc("/videos", CreateVideoEndPoint).Methods("POST") //Created for Testing Purposes
+	r.HandleFunc("/videos", UpdateVideoEndPoint).Methods("PUT")  //Creates for Testing Purposes
+	r.HandleFunc("/videos", DeleteVideoEndPoint).Methods("DELETE")
 	r.HandleFunc("/videos/{id}", FindVideoEndpoint).Methods("GET")
 	r.HandleFunc("/videos/{video_id}/comments", FindCommentsEndpoint).Methods("GET")
 	r.HandleFunc("/comment", CreateCommentEndpoint).Methods("POST")
-	r.HandleFunc("/watch/movie.mp4", StreamEndpoint)
+	r.HandleFunc("/watch/{id}", StreamEndpoint).Methods("GET")
 	r.HandleFunc("/videos", UpdateVideoEndPoint).Methods("PUT")
+	r.HandleFunc("/categories", CreateCategoryEndpoint).Methods("POST") //Created For Test Purposes
 	r.HandleFunc("/categories/{category_id}/videos", FindVideoByCategoryEndpoint).Methods("GET")
 	r.HandleFunc("/categories", AllCategoriesEndpoint).Methods("GET")
 	r.HandleFunc("/categories/{id}", FindCategoryEndpoint).Methods("GET")
 
-	if err := http.ListenAndServe(":3000", r); err != nil {
+	if err := http.ListenAndServe(":3002", r); err != nil {
 		log.Fatal(err)
 	}
 }
