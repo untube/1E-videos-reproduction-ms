@@ -1,0 +1,332 @@
+#Test with: http://editor.swagger.io/
+
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: Microservice for Video Playing and Search
+  description: Go + Mongo
+  license:
+    name: Software Architecture, 2019-I
+host: 192.168.99.101:3002
+basePath: /video-reproduction-ms
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /categories:
+    post:
+      summary: Creates a new category
+      operationId: CreateCategory
+      parameters:
+        - name: category
+          in: body
+          required: true
+          description: Category Object
+          schema:
+            $ref: '#/definitions/CategoryInput'
+      responses:
+        '201':
+          description: Created
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+    get:
+      summary: Returns all categories
+      operationId: FindAllCategories
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/CategoriesList'
+        '406':
+          description: Not Acceptable (Invalid Params)
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+
+  /categories/{id}:
+    get:
+      summary: Returns a Category with the given id
+      operationId: FindCategoryById
+      parameters:
+        - name: id
+          in: path
+          description: The id of the category to be returned
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/Category'
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '406':
+            description: Not Acceptable (Invalid Params)
+            schema:
+              $ref: '#/definitions/ErrorModel'
+        '500':
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+
+    put:
+      summary: Updates a category with the given id
+      operationId: UpdateCategory
+      parameters:
+        - name: id
+          in: path
+          description: The id of the category to be updated
+          required: true
+          type: integer
+        - name: category
+          in: body
+          required: true
+          description: Category Object
+          schema:
+            $ref: '#/definitions/CategoryInput'
+      responses:
+        '204':
+          description: No Content
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '406':
+            description: Not Acceptable (Invalid Params)
+            schema:
+              $ref: '#/definitions/ErrorModel'
+        '500':
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+
+    delete:
+      summary: Deletes a category with the given id
+      operationId: deleteCategory
+      parameters:
+        - name: id
+          in: path
+          description: The id of the category to be deleted
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '406':
+            description: Not Acceptable (Invalid Params)
+            schema:
+              $ref: '#/definitions/ErrorModel'
+        '500':
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+  /videos:
+    get:
+      summary: Returns all videos
+      operationId: FindAllVideos
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/VideosList'
+        '406':
+          description: Not Acceptable (Invalid Params)
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+            
+  /videos/{id}:        
+    get:
+      summary: Returns a Video with the given id
+      operationId: FindVideoById
+      parameters:
+        - name: id
+          in: path
+          description: The id of the video to be returned
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/Video'
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '406':
+            description: Not Acceptable (Invalid Params)
+            schema:
+              $ref: '#/definitions/ErrorModel'
+        '500':
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+            
+    put:
+      summary: Updates a video with the given id
+      operationId: UpdateVideo
+      parameters:
+        - name: id
+          in: path
+          description: The id of the video to be updated
+          required: true
+          type: string
+        - name: category
+          in: body
+          required: true
+          description: Category Object
+          schema:
+            $ref: '#/definitions/VideoInput'
+      responses:
+        '204':
+          description: No Content
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '406':
+            description: Not Acceptable (Invalid Params)
+            schema:
+              $ref: '#/definitions/ErrorModel'
+        '500':
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+          
+          
+  /categories/{id}/videos:
+    get:
+      summary: Returns videos with the given id of the Category
+      operationId: FindVideoByCategory
+      parameters:
+        - name: id
+          in: path
+          description: The id of the category to be returned with the videos
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/Video'
+        '404':
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorModel'
+        '406':
+            description: Not Acceptable (Invalid Params)
+            schema:
+              $ref: '#/definitions/ErrorModel'
+        '500':
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/ErrorModel'
+            
+
+definitions:
+
+  # Categories
+  Category:
+    type: object
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      credits:
+        type: integer
+
+  CategoryInput:
+    type: object
+    properties:
+      name:
+        type: string
+      credits:
+        type: integer
+
+  CategoriesList:
+    type: object
+    required:
+      - total
+      - list
+    properties:
+      total:
+        type: number
+      list:
+        type: array
+        items:
+          $ref: '#/definitions/Category'
+          
+    # Categories
+  Video:
+    type: object
+    properties:
+      id:
+        type: string
+      user_id:
+        type: integer
+      title: 
+        type: string
+      url:
+        type: string
+      views:
+        type: integer
+        
+  VideoInput:
+    type: object
+    properties:
+      user_id:
+        type: integer
+      title: 
+        type: string
+      url:
+        type: string
+
+  VideosList:
+    type: object
+    required:
+      - total
+      - list
+    properties:
+      total:
+        type: number
+      list:
+        type: array
+        items:
+          $ref: '#/definitions/Video'
+
+# Errors
+  ErrorModel:
+    type: object
+    required:
+      - message
+      - id
+    properties:
+      message:
+        type: string
+      id:
+        type: number
+      description:
+        type: object

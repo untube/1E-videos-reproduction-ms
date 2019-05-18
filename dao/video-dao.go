@@ -39,6 +39,13 @@ func (m *VideosDAO) FindVideoById(id string) (Video, error) {
 	return video, err
 }
 
+//Find a videos by Categories
+func (m *VideosDAO) FindVideoByCategory(id string) ([]Video, error) {
+	var videos []Video
+	err := db.C("videos").Find(bson.M{"category_id": id}).All(&videos)
+	return videos, err
+}
+
 // Insert a video into database
 func (m *VideosDAO) InsertVideo(video Video) error {
 	err := db.C("videos").Insert(&video)

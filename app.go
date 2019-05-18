@@ -123,6 +123,17 @@ func FindCommentsEndpoint(w http.ResponseWriter, r *http.Request) {
 	respondWithJson(w, http.StatusOK, comments)
 }
 
+func FindVideoByCategoryEndpoint(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+
+	videos, err := dao.FindVideoByCategory(params["category_id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid Action")
+	}
+
+	respondWithJson(w, http.StatusOK, videos)
+}
+
 func CreateCommentEndpoint(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var comment Comment
@@ -136,6 +147,25 @@ func CreateCommentEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondWithJson(w, http.StatusCreated, comment)
+}
+
+func AllCategoriesEndpoint(w http.ResponseWriter, r *http.Request) {
+	categories, err := dao.FindAllCategories()
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondWithJson(w, http.StatusOK, categories)
+}
+
+func FindCategoryEndpoint(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	category, err := dao.FindCategoryById(params["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid Category ID")
+		return
+	}
+	respondWithJson(w, http.StatusOK, category)
 }
 
 func StreamEndpoint(w http.ResponseWriter, r *http.Request) {
@@ -276,13 +306,17 @@ func main() {
 	fmt.Println("Starting Server")
 	r := mux.NewRouter()
 	r.HandleFunc("/videos", AllVideosEndPoint).Methods("GET")
-	r.HandleFunc("/videos", CreateVideoEndPoint).Methods("POST")
-	r.HandleFunc("/videos", UpdateVideoEndPoint).Methods("PUT")
-	r.HandleFunc("/videos", DeleteVideoEndPoint).Methods("DELETE")
+	//r.HandleFunc("/videos", CreateVideoEndPoint).Methods("POST") //Created for Testing Purposes
+	r.HandleFunc("/videos", UpdateVideoEndPoint).Methods("PUT") //Creates for Testing Purposes
+	//r.HandleFunc("/videos", DeleteVideoEndPoint).Methods("DELETE")
 	r.HandleFunc("/videos/{id}", FindVideoEndpoint).Methods("GET")
 	r.HandleFunc("/videos/{video_id}/comments", FindCommentsEndpoint).Methods("GET")
 	r.HandleFunc("/comment", CreateCommentEndpoint).Methods("POST")
 	r.HandleFunc("/watch/movie.mp4", StreamEndpoint)
+	r.HandleFunc("/videos", UpdateVideoEndPoint).Methods("PUT")
+	r.HandleFunc("/categories/{category_id}/videos", FindVideoByCategoryEndpoint).Methods("GET")
+	r.HandleFunc("/categories", AllCategoriesEndpoint).Methods("GET")
+	r.HandleFunc("/categories/{id}", FindCategoryEndpoint).Methods("GET")
 
 	if err := http.ListenAndServe(":3000", r); err != nil {
 		log.Fatal(err)
