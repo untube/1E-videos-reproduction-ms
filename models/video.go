@@ -12,5 +12,5 @@ type Video struct {
 	Description string        `bson:"description" json:"description"`
 	URL         string        `bson:"url" json:"url"`
 	Views       int           `bson:"views" json:"views"`
-	//Comments    []Comment     `bson:"comments" json:"comments"`
+	Duration    float32       `bson:"duration" json:"duration"`
 }

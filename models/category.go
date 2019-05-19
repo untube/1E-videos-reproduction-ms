@@ -6,6 +6,6 @@ import "gopkg.in/mgo.v2/bson"
 // the properties in mongodb document
 type Category struct {
 	ID          bson.ObjectId `bson:"_id" json:"id"`
-	Label       string        `bson:"category" json:"category"`
+	Name    string        `bson:"category" json:"category"`
 	Description string        `bson:"description" json:"description"`
 }

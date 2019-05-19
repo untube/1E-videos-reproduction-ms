@@ -8,17 +8,17 @@ If you want to run this in your local machine you'll have to change the settings
 
 ## Prerequisites
  
- -Docker
- -Go (optional)
- -Mongo(optional) 
+ - Docker
+ - Go (optional)
+ - Mongo(optional) 
 
 ## Built With
 
--Golang
+- Golang
 
-##Version
+## Version
 
-1.0.0
+- 1.0.0
 
 ## Author
 
