@@ -279,7 +279,7 @@ definitions:
         items:
           $ref: '#/definitions/Category'
           
-    # Categories
+    # Videos
   Video:
     type: object
     properties:
@@ -289,9 +289,9 @@ definitions:
         type: integer
       title: 
         type: string
-      url:
+      destination:
         type: string
-      views:
+      size:
         type: integer
         
   VideoInput:
@@ -301,8 +301,15 @@ definitions:
         type: integer
       title: 
         type: string
-      url:
+      destination:
         type: string
+      encoding:
+        type: string
+      fieldname:
+        type: string
+      originlname: string
+      size: 
+        type: float
 
   VideosList:
     type: object
