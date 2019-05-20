@@ -293,6 +293,16 @@ definitions:
         type: string
       size:
         type: integer
+      filename:
+        type: string
+      originalname:
+        type: string
+      encoding:
+        type: string
+      fieldname:
+        type: string
+      mimetype:
+        type: string
         
   VideoInput:
     type: object
