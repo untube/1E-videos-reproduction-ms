@@ -191,7 +191,7 @@ func StreamEndpoint(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "Invalid Movie ID")
 		return
 	}
-	path := VIDEO_DIR + video.URL
+	path := VIDEO_DIR + video.Destination
 	//path := video.URL
 
 	file, err := os.Open(path)
