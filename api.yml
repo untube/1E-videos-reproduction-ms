@@ -255,16 +255,16 @@ definitions:
         type: integer
       name:
         type: string
-      credits:
-        type: integer
+      description:
+        type: string
 
   CategoryInput:
     type: object
     properties:
       name:
         type: string
-      credits:
-        type: integer
+      description:
+        type: string
 
   CategoriesList:
     type: object
@@ -300,8 +300,6 @@ definitions:
       encoding:
         type: string
       fieldname:
-        type: string
-      mimetype:
         type: string
         
   VideoInput:

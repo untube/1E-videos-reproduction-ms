@@ -64,6 +64,10 @@ func CreateVideoEndPoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	video.ID = bson.NewObjectId()
+	if video.Destination == "" || video.User_ID == 0 || video.Title == "" || video.Category_ID == "" {
+		respondWithError(w, http.StatusInternalServerError, "Empty Values")
+		return
+	}
 	if err := dao.InsertVideo(video); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -157,6 +161,12 @@ func CreateCategoryEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	category.ID = bson.NewObjectId()
+
+	if category.Description == "" || category.Name == "" {
+		respondWithError(w, http.StatusInternalServerError, "Empty Values")
+		return
+	}
+
 	if err := dao.InsertCategory(category); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -327,7 +337,7 @@ func main() {
 	r.HandleFunc("/videos/{id}", FindVideoEndpoint).Methods("GET")
 	r.HandleFunc("/videos/{video_id}/comments", FindCommentsEndpoint).Methods("GET")
 	r.HandleFunc("/comment", CreateCommentEndpoint).Methods("POST")
-	r.HandleFunc("/watch/{id}", StreamEndpoint).Methods("GET")
+	r.HandleFunc("/watch/{id}", StreamEndpoint)
 	r.HandleFunc("/videos", UpdateVideoEndPoint).Methods("PUT")
 	r.HandleFunc("/categories", CreateCategoryEndpoint).Methods("POST") //Created For Test Purposes
 	r.HandleFunc("/categories/{category_id}/videos", FindVideoByCategoryEndpoint).Methods("GET")

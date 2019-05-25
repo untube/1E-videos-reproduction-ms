@@ -16,6 +16,5 @@ type Video struct {
 	FieldName    string        `bson:"fieldname" json:"fieldname"`
 	OriginalName string        `bson:"originalname" json:"originalname"`
 	Encoding     string        `bson:"encoding" json:"encoding"`
-	Mimetype     string        `bson:"mimetype" json:"mimetype"`
 	Filename     string        `bson:"filename" json:"filename"`
 }
