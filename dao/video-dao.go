@@ -119,6 +119,14 @@ func (m *VideosDAO) FindCategoryById(id string) (Category, error) {
 	return category, err
 }
 
+func (m *VideosDAO) FindVideosByName(title string) ([]Video, error) {
+
+	var videos []Video
+	err := db.C("videos").Find(bson.M{"title": bson.M{"$regex": bson.RegEx{Pattern: title, Options: "i"}}}).All(&videos)
+	return videos, err
+
+}
+
 // Insert a category into database
 func (m *VideosDAO) InsertCategory(category Category) error {
 	err := db.C("categories").Insert(&category)

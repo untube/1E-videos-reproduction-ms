@@ -9,17 +9,23 @@ import (
 	"strconv"
 	"strings"
 
-	"gopkg.in/mgo.v2/bson"
-
 	. "video-reproduction-ms/config"
 	. "video-reproduction-ms/dao"
 	. "video-reproduction-ms/models"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 )
 
 var config = Config{}
 var dao = VideosDAO{}
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024 * 8,
+	WriteBufferSize: 1024 * 8,
+}
 
 const VIDEO_DIR = "."
 
@@ -36,6 +42,9 @@ func init() {
 
 // GET list of videos
 func AllVideosEndPoint(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	videos, err := dao.FindAllVideos()
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
@@ -45,18 +54,37 @@ func AllVideosEndPoint(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET a video by its ID
-func FindVideoEndpoint(w http.ResponseWriter, r *http.Request) {
+
+func FindVideoEnpoint(w http.ResponseWriter, r *http.Request) {
+
 	params := mux.Vars(r)
 	video, err := dao.FindVideoById(params["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid Movie Id")
+		return
+	}
+
+	respondWithJson(w, http.StatusOK, video)
+
+}
+
+// GET a video by its Name
+func FindVideosByNameEndpoint(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	params := mux.Vars(r)
+	videos, err := dao.FindVideosByName(params["name"])
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid Movie ID")
 		return
 	}
-	respondWithJson(w, http.StatusOK, video)
+	respondWithJson(w, http.StatusOK, videos)
 }
 
 // POST a new video
 func CreateVideoEndPoint(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	defer r.Body.Close()
 	var video Video
 	if err := json.NewDecoder(r.Body).Decode(&video); err != nil {
@@ -77,6 +105,8 @@ func CreateVideoEndPoint(w http.ResponseWriter, r *http.Request) {
 
 // PUT update an existing video
 func UpdateVideoEndPoint(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	defer r.Body.Close()
 	var video Video
 	if err := json.NewDecoder(r.Body).Decode(&video); err != nil {
@@ -92,6 +122,8 @@ func UpdateVideoEndPoint(w http.ResponseWriter, r *http.Request) {
 
 // DELETE an existing video
 func DeleteVideoEndPoint(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	defer r.Body.Close()
 	var video Video
 	if err := json.NewDecoder(r.Body).Decode(&video); err != nil {
@@ -117,6 +149,8 @@ func respondWithJson(w http.ResponseWriter, code int, payload interface{}) {
 }
 
 func FindCommentsEndpoint(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	params := mux.Vars(r)
 
 	comments, err := dao.FindCommentsByVideoId(params["video_id"])
@@ -128,6 +162,8 @@ func FindCommentsEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func FindVideoByCategoryEndpoint(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	params := mux.Vars(r)
 
 	videos, err := dao.FindVideoByCategory(params["category_id"])
@@ -139,6 +175,8 @@ func FindVideoByCategoryEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateCommentEndpoint(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	defer r.Body.Close()
 	var comment Comment
 	if err := json.NewDecoder(r.Body).Decode(&comment); err != nil {
@@ -154,6 +192,8 @@ func CreateCommentEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateCategoryEndpoint(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	defer r.Body.Close()
 	var category Category
 	if err := json.NewDecoder(r.Body).Decode(&category); err != nil {
@@ -162,7 +202,7 @@ func CreateCategoryEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	category.ID = bson.NewObjectId()
 
-	if category.Description == "" || category.Name == "" {
+	if category.Description == "" || category.Category == "" {
 		respondWithError(w, http.StatusInternalServerError, "Empty Values")
 		return
 	}
@@ -175,6 +215,8 @@ func CreateCategoryEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func AllCategoriesEndpoint(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	categories, err := dao.FindAllCategories()
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
@@ -184,6 +226,8 @@ func AllCategoriesEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func FindCategoryEndpoint(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	params := mux.Vars(r)
 	category, err := dao.FindCategoryById(params["id"])
 	if err != nil {
@@ -321,28 +365,179 @@ func StreamEndpoint(w http.ResponseWriter, r *http.Request) {
 
 			data := buffer[:n]
 			w.Write(data)
+			//fmt.Println(data)
 			w.(http.Flusher).Flush()
 		}
 	}
+}
+
+func StreamWriter(w http.ResponseWriter, r *http.Request, ws *websocket.Conn) {
+
+	path := "./movie3.mp4"
+	file, err := os.Open(path)
+
+	if err != nil {
+		fmt.Println("Could not open")
+		return
+	}
+
+	defer file.Close()
+
+	fi, err := file.Stat()
+
+	if err != nil {
+		//w.WriteHeader(500)
+		return
+	}
+
+	fileSize := int(fi.Size())
+
+	if len(r.Header.Get("Range")) == 0 {
+
+		buffer := make([]byte, BUFSIZE)
+
+		for {
+			n, err := file.Read(buffer)
+
+			if n == 0 {
+				break
+			}
+
+			if err != nil {
+				break
+			}
+
+			data := buffer[:n]
+
+			err = ws.WriteMessage(1, data)
+			if err != nil {
+				log.Println(err)
+			}
+			//w.Write(data)
+			//w.(http.Flusher).Flush()
+		}
+
+	} else {
+
+		rangeParam := strings.Split(r.Header.Get("Range"), "=")[1]
+		splitParams := strings.Split(rangeParam, "-")
+
+		// response values
+
+		contentStartValue := 0
+		contentEndValue := fileSize - 1
+
+		if len(splitParams) > 1 {
+			contentEndValue, err = strconv.Atoi(splitParams[1])
+
+			if err != nil {
+				contentEndValue = fileSize - 1
+			}
+
+		}
+
+		buffer := make([]byte, BUFSIZE)
+
+		file.Seek(int64(contentStartValue), 0)
+
+		writeBytes := 0
+
+		for {
+			n, err := file.Read(buffer)
+
+			writeBytes += n
+
+			if n == 0 {
+				break
+			}
+
+			if err != nil {
+				break
+			}
+
+			if writeBytes >= contentEndValue {
+				data := buffer[:BUFSIZE-writeBytes+contentEndValue+1]
+				err = ws.WriteMessage(1, data)
+				if err != nil {
+					log.Println(err)
+				}
+
+				break
+			}
+
+			data := buffer[:n]
+			err = ws.WriteMessage(1, data)
+			if err != nil {
+				log.Println(err)
+			}
+
+			fmt.Println(data)
+
+		}
+	}
+}
+
+func reader(conn *websocket.Conn) {
+	for {
+		messageType, p, err := conn.ReadMessage()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		log.Println(string(p))
+
+		if err := conn.WriteMessage(messageType, p); err != nil {
+			{
+				log.Println(err)
+				return
+			}
+		}
+	}
+}
+
+func StreamWebSocket(w http.ResponseWriter, r *http.Request) {
+
+	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+
+	ws, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+	}
+
+	log.Println("Client Succesfully Connected...")
+
+	err = ws.WriteMessage(1, []byte("Hi Client!"))
+	if err != nil {
+		log.Println(err)
+	}
+
+	reader(ws)
+
+	StreamWriter(w, r, ws)
+	log.Println("Finished!")
+
 }
 
 // Define HTTP request routes
 func main() {
 	fmt.Println("Starting Server")
 	r := mux.NewRouter()
-	r.HandleFunc("/videos", AllVideosEndPoint).Methods("GET")
+	r.HandleFunc("/videos", AllVideosEndPoint).Methods("GET", "OPTIONS")
+	r.HandleFunc("/videos/name/{name}", FindVideosByNameEndpoint).Methods("GET")
 	r.HandleFunc("/videos", CreateVideoEndPoint).Methods("POST") //Created for Testing Purposes
 	r.HandleFunc("/videos", UpdateVideoEndPoint).Methods("PUT")  //Creates for Testing Purposes
 	r.HandleFunc("/videos", DeleteVideoEndPoint).Methods("DELETE")
-	r.HandleFunc("/videos/{id}", FindVideoEndpoint).Methods("GET")
+	r.HandleFunc("/videos/{id}", FindVideoEnpoint).Methods("GET")
 	r.HandleFunc("/videos/{video_id}/comments", FindCommentsEndpoint).Methods("GET")
 	r.HandleFunc("/comment", CreateCommentEndpoint).Methods("POST")
-	r.HandleFunc("/watch/{id}", StreamEndpoint)
+	r.HandleFunc("/watch/{id}", StreamEndpoint).Methods("GET")
 	r.HandleFunc("/videos", UpdateVideoEndPoint).Methods("PUT")
 	r.HandleFunc("/categories", CreateCategoryEndpoint).Methods("POST") //Created For Test Purposes
 	r.HandleFunc("/categories/{category_id}/videos", FindVideoByCategoryEndpoint).Methods("GET")
 	r.HandleFunc("/categories", AllCategoriesEndpoint).Methods("GET")
 	r.HandleFunc("/categories/{id}", FindCategoryEndpoint).Methods("GET")
+	//r.HandleFunc("/ws", StreamWebSocket)
 
 	if err := http.ListenAndServe(":3002", r); err != nil {
 		log.Fatal(err)
