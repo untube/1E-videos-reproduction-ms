@@ -1,6 +1,6 @@
 # Video-Reproduction-ms 
 
-This is an application written in go, which purpose is to serve as a microservice for streaming videos and managing the content related to the video stream.
+This is an application written in go, which purpose is to serve as a microservice for streaming videos and managing the content related to the video stream. Streaming is made through a technique is called pseudo-streaming. Pseudo-Streaming is a techinque used by various video platforms such as youtube (FYI) 
 
 ## Getting Started 
 

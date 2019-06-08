@@ -81,6 +81,19 @@ func FindVideosByNameEndpoint(w http.ResponseWriter, r *http.Request) {
 	respondWithJson(w, http.StatusOK, videos)
 }
 
+// GET a video by its Name
+func FindVideosByUserEndpoint(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	params := mux.Vars(r)
+	videos, err := dao.FindVideosByUserId(params["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid Movie ID")
+		return
+	}
+	respondWithJson(w, http.StatusOK, videos)
+}
+
 // POST a new video
 func CreateVideoEndPoint(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -125,12 +138,8 @@ func DeleteVideoEndPoint(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	defer r.Body.Close()
-	var video Video
-	if err := json.NewDecoder(r.Body).Decode(&video); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
-		return
-	}
-	if err := dao.DeleteVideo(video); err != nil {
+	params := mux.Vars(r)
+	if err := dao.DeleteVideo(params["id"]); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -239,33 +248,29 @@ func FindCategoryEndpoint(w http.ResponseWriter, r *http.Request) {
 
 func StreamEndpoint(w http.ResponseWriter, r *http.Request) {
 
-	params := mux.Vars(r)
+	/*params := mux.Vars(r)
 	video, err := dao.FindVideoById(params["id"])
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid Movie ID")
 		return
-	}
-	path := VIDEO_DIR + video.Destination
+	} */
+	//path := VIDEO_DIR + video.Destination
 	//path := video.URL
 
-	file, err := os.Open(path)
 	//file, err := os.Open(path)
 
-	if err != nil {
-		w.WriteHeader(500)
-		return
-	}
+	log.Println(DB.Name)
+	file, err := DB.GridFS("fs").Open("new2.mp4")
 
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("I was Opened")
+
+	fileSize := int(file.Size())
+
+	//file, err := os.Open(path)
 	defer file.Close()
-
-	fi, err := file.Stat()
-
-	if err != nil {
-		w.WriteHeader(500)
-		return
-	}
-
-	fileSize := int(fi.Size())
 
 	if len(r.Header.Get("Range")) == 0 {
 
@@ -366,7 +371,7 @@ func StreamEndpoint(w http.ResponseWriter, r *http.Request) {
 			data := buffer[:n]
 			w.Write(data)
 			//fmt.Println(data)
-			w.(http.Flusher).Flush()
+			//w.(http.Flusher).Flush()
 		}
 	}
 }
@@ -408,8 +413,8 @@ func StreamWriter(w http.ResponseWriter, r *http.Request, ws *websocket.Conn) {
 			}
 
 			data := buffer[:n]
-
-			err = ws.WriteMessage(1, data)
+			//sEnc := b64.StdEncoding.EncodeToString(data)
+			err = ws.WriteMessage(2, data)
 			if err != nil {
 				log.Println(err)
 			}
@@ -457,7 +462,8 @@ func StreamWriter(w http.ResponseWriter, r *http.Request, ws *websocket.Conn) {
 
 			if writeBytes >= contentEndValue {
 				data := buffer[:BUFSIZE-writeBytes+contentEndValue+1]
-				err = ws.WriteMessage(1, data)
+				//sEnc := b64.StdEncoding.EncodeToString(data)
+				err = ws.WriteMessage(2, data)
 				if err != nil {
 					log.Println(err)
 				}
@@ -466,7 +472,8 @@ func StreamWriter(w http.ResponseWriter, r *http.Request, ws *websocket.Conn) {
 			}
 
 			data := buffer[:n]
-			err = ws.WriteMessage(1, data)
+			//sEnc := b64.StdEncoding.EncodeToString(data)
+			err = ws.WriteMessage(2, data)
 			if err != nil {
 				log.Println(err)
 			}
@@ -504,19 +511,62 @@ func StreamWebSocket(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
-
 	log.Println("Client Succesfully Connected...")
-
-	err = ws.WriteMessage(1, []byte("Hi Client!"))
-	if err != nil {
-		log.Println(err)
-	}
-
-	reader(ws)
-
 	StreamWriter(w, r, ws)
 	log.Println("Finished!")
+	ws.Close()
 
+}
+
+func UploadFile(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("File Upload Endpoint Hit")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	// Parse our multipart form, 10 << 20 specifies a maximum
+	// upload of 10 MB files.
+	r.ParseMultipartForm(32 << 20)
+	// FormFile returns the first file for the given key `myFile`
+	// it also returns the FileHeader so we can get the Filename,
+	// the Header and the size of the file
+	file, handler, err := r.FormFile("file")
+	if err != nil {
+		fmt.Println("Error Retrieving the File")
+		fmt.Println(err)
+		return
+	}
+	defer file.Close()
+
+	fmt.Printf("Uploaded File: %+v\n", handler.Filename)
+	fmt.Printf("File Size: %+v\n", handler.Size)
+	fmt.Printf("MIME Header: %+v\n", handler.Header)
+
+	if err := dao.UploadVideo(file); err != nil {
+		log.Println("Tried to Upload")
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	/*
+		// Create a temporary file within our temp-images directory that follows
+		// a particular naming pattern
+		tempFile, err := ioutil.TempFile("temp", "upload-*.mp4")
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer tempFile.Close()
+
+		// read all of the contents of our uploaded file into a
+		// byte array
+		fileBytes, err := ioutil.ReadAll(file)
+		if err != nil {
+			fmt.Println(err)
+		}
+		// write this byte array to our temporary file
+		tempFile.Write(fileBytes)
+		// return that we have successfully uploaded our file!
+		fmt.Fprintf(w, "Successfully Uploaded File\n")
+	*/
 }
 
 // Define HTTP request routes
@@ -527,19 +577,21 @@ func main() {
 	r.HandleFunc("/videos/name/{name}", FindVideosByNameEndpoint).Methods("GET")
 	r.HandleFunc("/videos", CreateVideoEndPoint).Methods("POST") //Created for Testing Purposes
 	r.HandleFunc("/videos", UpdateVideoEndPoint).Methods("PUT")  //Creates for Testing Purposes
-	r.HandleFunc("/videos", DeleteVideoEndPoint).Methods("DELETE")
+	r.HandleFunc("/videos/{id}", DeleteVideoEndPoint).Methods("DELETE")
 	r.HandleFunc("/videos/{id}", FindVideoEnpoint).Methods("GET")
+	r.HandleFunc("/videos/user/{id}", FindVideosByUserEndpoint).Methods("GET")
 	r.HandleFunc("/videos/{video_id}/comments", FindCommentsEndpoint).Methods("GET")
 	r.HandleFunc("/comment", CreateCommentEndpoint).Methods("POST")
-	r.HandleFunc("/watch/{id}", StreamEndpoint).Methods("GET")
 	r.HandleFunc("/videos", UpdateVideoEndPoint).Methods("PUT")
 	r.HandleFunc("/categories", CreateCategoryEndpoint).Methods("POST") //Created For Test Purposes
 	r.HandleFunc("/categories/{category_id}/videos", FindVideoByCategoryEndpoint).Methods("GET")
 	r.HandleFunc("/categories", AllCategoriesEndpoint).Methods("GET")
 	r.HandleFunc("/categories/{id}", FindCategoryEndpoint).Methods("GET")
-	//r.HandleFunc("/ws", StreamWebSocket)
+	r.HandleFunc("/upload", UploadFile)
+	r.HandleFunc("/ws", StreamWebSocket)
+	r.HandleFunc("/watch/{id}", StreamEndpoint)
 
-	if err := http.ListenAndServe(":3002", r); err != nil {
+	if err := http.ListenAndServe(":3000", r); err != nil {
 		log.Fatal(err)
 	}
 }
