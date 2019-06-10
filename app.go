@@ -591,7 +591,7 @@ func main() {
 	r.HandleFunc("/ws", StreamWebSocket)
 	r.HandleFunc("/watch/{id}", StreamEndpoint)
 
-	if err := http.ListenAndServe(":3000", r); err != nil {
+	if err := http.ListenAndServe(":3002", r); err != nil {
 		log.Fatal(err)
 	}
 }
