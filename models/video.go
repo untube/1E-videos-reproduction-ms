@@ -10,11 +10,8 @@ type Video struct {
 	Category_ID  string        `bson:"category_id" json:"category_id"`
 	Title        string        `bson:"title" json:"title"`
 	Description  string        `bson:"description" json:"description"`
-	Destination  string        `bson:"destination" json:"destination"`
-	Views        int           `bson:"views" json:"views"`
-	Size         float32       `bson:"size" json:"size"`
 	FieldName    string        `bson:"fieldname" json:"fieldname"`
 	OriginalName string        `bson:"originalname" json:"originalname"`
-	Encoding     string        `bson:"encoding" json:"encoding"`
 	Filename     string        `bson:"filename" json:"filename"`
+	Image        string        `bson:"image" json:"image"`
 }
