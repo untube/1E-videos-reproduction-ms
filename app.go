@@ -105,7 +105,7 @@ func CreateVideoEndPoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	video.ID = bson.NewObjectId()
-	if video.Destination == "" || video.User_ID == 0 || video.Title == "" || video.Category_ID == "" {
+	if video.User_ID == 0 || video.Title == "" || video.Category_ID == "" {
 		respondWithError(w, http.StatusInternalServerError, "Empty Values")
 		return
 	}
