@@ -248,19 +248,16 @@ func FindCategoryEndpoint(w http.ResponseWriter, r *http.Request) {
 
 func StreamEndpoint(w http.ResponseWriter, r *http.Request) {
 
-	/*params := mux.Vars(r)
+	//Open File by Id
+	params := mux.Vars(r)
 	video, err := dao.FindVideoById(params["id"])
+
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid Movie ID")
 		return
-	} */
-	//path := VIDEO_DIR + video.Destination
-	//path := video.URL
+	}
 
-	//file, err := os.Open(path)
-
-	log.Println(DB.Name)
-	file, err := DB.GridFS("fs").Open("new2.mp4")
+	file, err := DB.GridFS("files").OpenId(bson.ObjectIdHex(video.Video_ID))
 
 	if err != nil {
 		log.Fatal(err)
@@ -269,7 +266,6 @@ func StreamEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	fileSize := int(file.Size())
 
-	//file, err := os.Open(path)
 	defer file.Close()
 
 	if len(r.Header.Get("Range")) == 0 {
@@ -371,7 +367,7 @@ func StreamEndpoint(w http.ResponseWriter, r *http.Request) {
 			data := buffer[:n]
 			w.Write(data)
 			//fmt.Println(data)
-			//w.(http.Flusher).Flush()
+			w.(http.Flusher).Flush()
 		}
 	}
 }
