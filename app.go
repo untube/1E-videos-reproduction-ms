@@ -260,7 +260,8 @@ func StreamEndpoint(w http.ResponseWriter, r *http.Request) {
 	file, err := DB.GridFS("files").OpenId(bson.ObjectIdHex(video.Video_ID))
 
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error Occurred")
+		return
 	}
 	log.Printf("I was Opened")
 
