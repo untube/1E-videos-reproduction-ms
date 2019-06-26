@@ -368,10 +368,19 @@ func StreamEndpoint(w http.ResponseWriter, r *http.Request) {
 
 			data := buffer[:n]
 			w.Write(data)
-			//fmt.Println(data)
 			w.(http.Flusher).Flush()
+
 		}
 	}
+
+	video.Views = video.Views + 1
+
+	if err := dao.UpdateVideo(video); err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	log.Printf(strconv.Itoa(video.Views))
+
 }
 
 func StreamWriter(w http.ResponseWriter, r *http.Request, ws *websocket.Conn) {
