@@ -56,10 +56,31 @@ func (m *VideosDAO) InsertVideo(video Video) error {
 	return err
 }
 
+// Delete an existing vide
+func DeleteVideoFile(id string) {
+
+	if id != "" {
+		err := DB.GridFS("files").RemoveId(bson.ObjectIdHex(id))
+		if err != nil {
+			fmt.Printf("Could not remove File")
+		}
+	}
+
+}
+
 // Delete an existing video
 func (m *VideosDAO) DeleteVideo(id string) error {
 	var video Video
 	err := DB.C("videos").FindId(bson.ObjectIdHex(id)).One(&video)
+
+	video_id := video.Video_ID
+
+	if err != nil {
+		fmt.Printf("Error findind video")
+	}
+
+	DeleteVideoFile(video_id)
+
 	err = DB.C("videos").Remove(&video)
 	return err
 }
@@ -173,7 +194,7 @@ func (m *VideosDAO) UploadVideo(file multipart.File) error {
 	my_db := DB
 
 	// Create the file in the Mongodb Gridfs instance
-	my_file, err := my_db.GridFS("fs").Create("new2.mp4")
+	my_file, err := my_db.GridFS("files").Create("new2.mp4")
 	// ... check err value for nil
 
 	// Write the file to the Mongodb Gridfs instance

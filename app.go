@@ -139,6 +139,7 @@ func DeleteVideoEndPoint(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	defer r.Body.Close()
 	params := mux.Vars(r)
+
 	if err := dao.DeleteVideo(params["id"]); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return

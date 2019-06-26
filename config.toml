@@ -1,8 +1,6 @@
-server1="mongodb://35.196.3.185:27017"
+server="mongodb://35.196.3.185:27017"
+server1="localhost"
+server2="mongodb"
 database1="admin"
-
-server2="localhost"
-database2="videos_db"
-
-server="mongodb"
 database="videos_db"
+
