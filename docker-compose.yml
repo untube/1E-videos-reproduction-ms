@@ -17,5 +17,6 @@ services:
           - MONGO_LOG_DIR=/dev/null
         volumes:
           - ./data/db:/data/db
+        entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "rs0" ]
         ports:
             - 27017:27017
