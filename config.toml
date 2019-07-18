@@ -1,4 +1,4 @@
-server="mongodb"
-server1 = "mongodb://ip1,ip2/?replicaSet=rs0"
+server="videosdb"
+server1 = "mongodb://35.227.124.114:27017,35.196.3.185:27017/?replicaSet=rs0"
 database="videos_db"
 
